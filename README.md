@@ -39,5 +39,8 @@ To Stop:
 docker-compose down
 ```
 
+## Local Hosting
 
+**FastAPI hosted locally on port 8000** http://localhost:8000/
+**Next.js UI hosted locally on port 3000** http://localhost:3000/
 
