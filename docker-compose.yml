@@ -24,7 +24,7 @@ services:
       DB_CONNECTION_STRING: mysql+pymysql://root:password@db:3306/testdb
     ports:
       - "8000:8000"                     
-    restart: no
+    restart: always
 
   ui:
     build: ./UI
