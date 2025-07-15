@@ -2,6 +2,7 @@
 A repo containing a simple webapp powered by FastAPI written in Python, a UI in next.js, and a MySQL database which are meant to be deployed separately in Docker containers. The Dockerfiles for configuration of the containers and a docker-compose.yml are included in this repo for replication.
 
 **FastAPI source code:** https://bitbucket.org/metawhale/fast-api-clean/src/main/
+
 **Next.js source code:** https://bitbucket.org/metawhale/nextjs_app/src/main/
 
 ## Getting Started
@@ -35,7 +36,8 @@ docker-compose up
 
 To Stop:
 ```bash
-docker-compose up 
+docker-compose down
 ```
+
 
 
