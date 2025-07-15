@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password   
+      MYSQL_USER: user   
+      MYSQL_DATABASE: testdb             
+    ports:
+      - "3306:3306"                      
+    volumes:
+      - ./API/db-data:/var/lib/mysql          
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build: ./API 
+    depends_on:
+      db:
+        condition: service_healthy                              
+    environment:
+      DB_CONNECTION_STRING: mysql+pymysql://root:password@db:3306/testdb
+    ports:
+      - "8000:8000"                     
+    restart: no
+
+  ui:
+    build: ./UI
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    restart: always                
+
+volumes:
+  db_data:  
+  testdb_data:                            
