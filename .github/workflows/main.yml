@@ -17,35 +17,29 @@ jobs:
         run: |
           docker compose build
 
-      - name: Run DB container first and wait to be ready
+      - name: Wait for MySQL to be ready
         run: |
-          docker compose run --rm api pytest test_db.py
-          for i in {1..10}; do
-            nc -z db 3306 && echo "DB is ready" && break
-            echo "Waiting for DB..."
-            sleep 5
+          docker compose up -d db
+          echo "⏳ Waiting for MySQL to accept connections..."
+          for i in {1..20}; do
+            docker compose exec db mysqladmin ping -h "localhost" -p"password" --silent && break
+            echo "Still waiting for db..."
+            sleep 3
           done
 
-      - name: Run API and UI containers and then test all.
+      - name: Run Tests
         run: |
-          MAX_TRIES=50
-          TRIES=0
-
-          while true; do
+          docker compose run --rm api pytest test_main.py
+          docker compose up -d ui
+          sleep 5
+          for i in {1..10}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
             if [ "$STATUS" -eq 200 ]; then
-              echo "✅ UI is up!"
+              echo "UI is up!"
               break
             fi
-
-            if [ "$TRIES" -ge "$MAX_TRIES" ]; then
-              echo "❌ UI did not start after $MAX_TRIES attempts."
-              exit 1
-            fi
-
-            echo "⏳ Waiting for UI..."
+            echo "Waiting for UI..."
             sleep 3
-            TRIES=$((TRIES + 1))
           done
 
       - name: Deploy to Staging Server via SSH
