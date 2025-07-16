@@ -23,7 +23,7 @@ Make sure you have the following installed:
 git clone https://github.com/ave-basco/docker-devops-exercise-task1
 cd docker-devops-exercise-task1
 ```
-### 2. Startup Docker Engine
+### 2. Startup Docker Engine locally
 ### 3. Build and start containers
 ```bash
 docker-compose up --build
