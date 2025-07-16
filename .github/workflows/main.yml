@@ -1,0 +1,83 @@
+name: CI/CD Pipeline - DevOps Task 2
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build Docker Images
+        run: |
+          docker compose build
+
+      - name: Run Tests
+        run: |
+          docker compose run --rm api pytest test_main.py
+          docker compose run --rm api pytest test_db.py
+          docker compose up -d ui
+          sleep 5
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+            if [ "$STATUS" -eq 200 ]; then
+              echo "UI is up!"
+              break
+            fi
+            echo "Waiting for UI..."
+            sleep 3
+          done
+
+      - name: Deploy to Staging Server via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            if [ ! -d docker-devops-exercise-task1 ]; then
+              git clone https://github.com/ave-basco/docker-devops-exercise-task1
+            fi
+            cd ~/docker-devops-exercise-task1
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+            
+      - name: Send Email Notification (Success)
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: GitHub Actions - Deployment Status - Success
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          # You can customize the message based on success/failure
+          body: |
+            The deployment job has completed.
+            Status: ${{ job.status }}
+          secure: true
+          
+      - name: Send Email Notification (Failure)
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: GitHub Actions - Deployment Status - Failed
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          # You can customize the message based on success/failure
+          body: |
+            The deployment job has completed.
+            Status: ${{ job.status }}
+          secure: true
