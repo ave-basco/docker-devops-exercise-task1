@@ -17,10 +17,18 @@ jobs:
         run: |
           docker compose build
 
-      - name: Run Tests
+      - name: Run DB container first and wait to be ready
+        run: |
+          docker compose run --rm api pytest test_db.py
+          for i in {1..10}; do
+            nc -z db 3306 && echo "DB is ready" && break
+            echo "Waiting for DB..."
+            sleep 5
+          done
+
+      - name: Run API and UI containers and then test all.
         run: |
           docker compose run --rm api pytest test_main.py
-          docker compose run --rm api pytest test_db.py
           docker compose up -d ui
           sleep 5
           for i in {1..10}; do
