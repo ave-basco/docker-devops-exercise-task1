@@ -9,14 +9,14 @@ services:
     ports:
       - "3306:3306"                      
     volumes:
-      - ./API/db-data:/var/lib/mysql          
+      - ./api/db-data:/var/lib/mysql          
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 3s
       retries: 10
   api:
-    build: ./API 
+    build: ./api
     depends_on:
       db:
         condition: service_healthy                              
@@ -27,7 +27,7 @@ services:
     restart: always
 
   ui:
-    build: ./UI
+    build: ./ui
     depends_on:
       - api
     environment:
